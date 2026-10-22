@@ -65,7 +65,7 @@ export class Register {
         nickname: nickname.trim(),
         email: email.trim(),
         password,
-        password_confirm: repeatPassword
+        password_confirm: repeatPassword,
       })
       .subscribe({
         next: () => this.router.navigate(['/login'], { queryParams: { registered: 1 } }),

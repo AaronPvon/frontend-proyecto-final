@@ -1,7 +1,10 @@
+/* ---- Enlaces ---- */
 .nav-link {
   display: inline-block;
   padding: 0.45rem 0.85rem;
   border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--color-muted);
   transition: color 150ms, background-color 150ms;
 }
@@ -15,4 +18,87 @@
 .nav-active {
   color: var(--color-light-blue);
   background-color: rgb(25 176 212 / 0.14);
+}
+
+/* ---- Botón de hamburguesa ---- */
+.menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgb(25 176 212 / 0.25);
+  border-radius: 0.75rem;
+  color: var(--color-frost);
+  cursor: pointer;
+  transition: background-color 150ms, border-color 150ms;
+}
+
+.menu-button:hover,
+.menu-button[aria-expanded='true'] {
+  border-color: rgb(25 176 212 / 0.6);
+  background-color: rgb(25 176 212 / 0.1);
+}
+
+/* ---- Lista de enlaces ---- */
+
+/* Móvil: oculta hasta que se abre; ocupa todo el ancho, bajo el logo */
+.nav-menu {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgb(25 176 212 / 0.15);
+}
+
+.nav-menu-open {
+  display: flex;
+  animation: menu-in 150ms ease-out;
+}
+
+/* En móvil, cada enlace es una fila completa: más fácil de tocar */
+.nav-menu .nav-link {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  text-align: left;
+}
+
+/* Desde sm (640 px): enlaces en fila a la derecha y sin botón.
+   Se oculta aquí y no con la clase sm:hidden de Tailwind, porque el CSS del
+   componente tiene prioridad sobre las clases de Tailwind y la anularía. */
+@media (min-width: 640px) {
+  .menu-button {
+    display: none;
+  }
+
+  .nav-menu,
+  .nav-menu-open {
+    display: flex;
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+    animation: none;
+  }
+
+  .nav-menu .nav-link {
+    display: inline-block;
+    width: auto;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.875rem;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
 }

@@ -134,7 +134,7 @@ Genera la versión optimizada en la carpeta `dist/`.
 
 ## Rutas de la aplicación
 
-La app muestra siempre un navbar, el contenido y un footer. El navbar enlaza a Inicio, Login y Register sin sesión, y a Inicio, Mis grupos, Invitaciones y Cerrar sesión con sesión iniciada.
+La app muestra siempre un navbar, el contenido y un footer. El navbar enlaza a Inicio, Login y Register sin sesión, y a Inicio, Mis grupos, Invitaciones y Cerrar sesión con sesión iniciada. En móvil, los enlaces se recogen en un menú de hamburguesa.
 
 | Ruta | Acceso | Contenido |
 |---|---|---|

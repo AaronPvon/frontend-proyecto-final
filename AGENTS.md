@@ -105,6 +105,7 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 - El navbar contiene el logotipo de la app y los enlaces de navegación:
   - Sin sesión iniciada: Inicio, Login y Register.
   - Con sesión iniciada: Inicio, Mis grupos, Invitaciones y Cerrar sesión.
+- En móvil (por debajo de 640 px, el `sm` de Tailwind), los enlaces se recogen en un menú de hamburguesa que se despliega dentro de la propia caja del navbar. Se cierra al navegar, al pulsar Escape, al tocar fuera o al cerrar sesión. El botón lleva `aria-expanded`, `aria-controls` y la etiqueta "Abrir menú" o "Cerrar menú". Hay una sola lista de enlaces para móvil y escritorio.
 
 ### Rutas
 
@@ -128,6 +129,7 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 - Formularios reactivos (`ReactiveFormsModule`), con las mismas validaciones que la API.
 - Idioma `es-ES` (`LOCALE_ID`) para los pipes `currency` y `date`: los importes se muestran como "176,66 €". Se convierten a número solo para mostrarlos.
 - Los parámetros de ruta llegan a los componentes como `input()` (`withComponentInputBinding`).
+- El CSS de un componente tiene prioridad sobre las clases de Tailwind (que van en una capa `@layer`). Si el CSS del componente fija una propiedad, como `display`, la clase de Tailwind sobre esa misma propiedad no tiene efecto: hay que cambiarla también en el CSS del componente (por ejemplo, el botón de hamburguesa se oculta con una media query en `navbar.css`, no con `sm:hidden`).
 
 ### Estructura del proyecto
 
