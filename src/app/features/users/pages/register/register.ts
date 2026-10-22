@@ -55,7 +55,7 @@ export class Register {
 
     this.loading.set(true);
     this.errorMessage.set(null);
-    const { name, lastname, nickname, email, password } = this.form.getRawValue();
+    const { name, lastname, nickname, email, password, repeatPassword } = this.form.getRawValue();
 
     // Se quitan los espacios de los extremos, nunca de la contraseña
     this.auth
@@ -65,6 +65,7 @@ export class Register {
         nickname: nickname.trim(),
         email: email.trim(),
         password,
+        password_confirm: repeatPassword
       })
       .subscribe({
         next: () => this.router.navigate(['/login'], { queryParams: { registered: 1 } }),

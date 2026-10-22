@@ -188,7 +188,7 @@ La API está en [backend-proyecto-final](https://github.com/AaronPvon/backend-pr
 | Método   | Ruta                                       | Acceso                  | Respuesta                                                  |
 | -------- | ------------------------------------------ | ----------------------- | ---------------------------------------------------------- |
 | `GET`    | `/api/health`                              | Pública                 | Estado de la API y la base de datos.                       |
-| `POST`   | `/api/auth/register`                       | Pública                 | 201 con el usuario creado.                                 |
+| `POST`   | `/api/auth/register`                       | Pública                 | Body `{name, lastname, nickname, email, password, password_confirm}`. 201 con el usuario creado. |
 | `POST`   | `/api/auth/login`                          | Pública                 | `{"access_token": "...", "token_type": "bearer"}`.         |
 | `GET`    | `/api/users/me`                            | Con sesión              | Usuario actual.                                            |
 | `GET`    | `/api/groups?status=active\|closed`        | Con sesión              | "Mis grupos".                                              |
@@ -208,6 +208,7 @@ La API está en [backend-proyecto-final](https://github.com/AaronPvon/backend-pr
 
 Pendientes en la API: editar y borrar gastos (fase 4), liquidaciones (fase 5) y cierre y reapertura (fase 6).
 
+- En desarrollo (`npm start`), `getErrorMessage` escribe en la consola del navegador el error completo de la API, para ver qué campo ha rechazado aunque en pantalla salga un mensaje genérico.
 - `POST /api/auth/login` recibe JSON: `{"login": "<email o nickname>", "password": "..."}`. El token caduca a los 60 minutos y no hay refresh token.
 - Los importes viajan como texto (`"176.66"`) para que sean exactos.
 - Los datos de usuario dentro de un grupo son id, nombre, apellidos y nickname. Nunca el email.
@@ -222,6 +223,7 @@ Pendientes en la API: editar y borrar gastos (fase 4), liquidaciones (fase 5) y 
 - El email y el nickname son únicos.
 - El nickname tiene entre 3 y 50 caracteres y solo puede contener letras sin tildes ni ñ (`A-Z`, `a-z`), números, `_`, `.` y `-` (patrón `^[A-Za-z0-9_.-]{3,50}$`). Nunca puede contener `@`, para que no se confunda con un email en el login.
 - La contraseña debe tener entre 8 y 128 caracteres. El máximo no es una regla de seguridad para el usuario, sino una protección del servidor: calcular un hash Argon2 es lento a propósito. Por el momento no se exigen más reglas.
+- El registro recibe también `password_confirm` (la contraseña repetida), y la API comprueba que coincide con `password`: si no, responde 422 "Las contraseñas no coinciden". El formulario del front-end lo comprueba antes, pero lo envía siempre.
 - En el login solo se exige que la contraseña no llegue vacía (y el máximo de 128), para que los usuarios con contraseñas antiguas puedan entrar si algún día cambian las reglas.
 - Al registrarse se quitan los espacios del principio y del final del nombre, los apellidos y el nickname, pero nunca de la contraseña.
 - Las reglas del nickname y de la contraseña se validan solo en la API (modelos Pydantic), no con `CHECK` en la base de datos.
@@ -347,6 +349,7 @@ Cambio de planificación por la fecha de entrega (23/10/2026, antes de las 00:00
 - Alcance de la entrega: front-end de autenticación, grupos (listado, creación y detalle con saldos), invitaciones y gastos (listado y creación); back-end de la fase 4 reducida (`GET` y `POST /api/groups/{group_id}/expenses`).
 - Quedan pendientes para después de la entrega: editar y borrar gastos, liquidaciones (fase 5), cierre y reapertura (fase 6), salir y expulsar desde la interfaz. El filtro de grupos cerrados se adelantó y ya está hecho (bloque 2 del front-end).
 - Durante la entrega se prueba directamente en Swagger y en el navegador, sin scripts de pruebas temporales.
+- Los dos README incluyen una sección "Alcance de esta entrega" con lo que funciona de principio a fin y lo que queda pendiente, para que no se lea como hecho lo que solo está diseñado.
 - Proyecto separado en dos repositorios (`backend-proyecto-final` y `frontend-proyecto-final`), cada uno con su `README.md` y su `AGENTS.md` (ver Repositorios del proyecto). ✅ Completado.
 
 ## Front-end
@@ -355,3 +358,4 @@ Cambio de planificación por la fecha de entrega (23/10/2026, antes de las 00:00
 - Bloque 2 (grupos: listado "Mis grupos" con filtro activos/cerrados, creación de grupo y detalle con saldos, presupuesto y miembros) ✅ completado.
 - Bloque 3 (invitaciones: `/invitations` para aceptar o rechazar, e invitar y anular desde el detalle del grupo) ✅ completado.
 - Bloque 5 (gastos: listado en el detalle del grupo y creación con los tres modos de reparto) ✅ completado.
+- Bloque 6 (entrega): compilación de producción comprobada (433 kB iniciales, por debajo del límite de 500 kB de Angular) y prueba de punta a punta con una usuaria nueva (registro, grupo, invitación, gasto y saldos). ✅ completado.

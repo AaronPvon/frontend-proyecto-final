@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { isDevMode } from '@angular/core';
 
 // Convierte un error de la API en un mensaje para el usuario.
 // FastAPI envía los errores de dos formas:
@@ -7,6 +8,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 //   Los de nuestras reglas (type "value_error") llevan el mensaje en español
 //   precedido de "Value error, "; el resto vienen en inglés y no se muestran tal cual.
 export function getErrorMessage(error: unknown): string {
+  // En desarrollo (npm start), el error completo sale en la consola del navegador:
+  // así se ve qué campo rechazó la API aunque en pantalla salga el mensaje genérico
+  if (isDevMode()) {
+    console.error('Error de la API:', error instanceof HttpErrorResponse ? error.error : error);
+  }
   if (error instanceof HttpErrorResponse) {
     if (error.status === 0) {
       return 'No se puede conectar con el servidor. Comprueba que la API está arrancada.';

@@ -7,6 +7,7 @@ export interface User {
   lastname: string;
   nickname: string;
   email: string;
+  created_at: string;
 }
 
 // Cuerpo de POST /api/auth/register
@@ -16,6 +17,7 @@ export interface UserCreate {
   nickname: string;
   email: string;
   password: string;
+  password_confirm: string;
 }
 
 // Cuerpo de POST /api/auth/login: "login" es el email o el nickname
