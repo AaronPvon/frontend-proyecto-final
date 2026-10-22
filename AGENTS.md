@@ -189,15 +189,17 @@ La API está en [backend-proyecto-final](https://github.com/AaronPvon/backend-pr
 | `GET`    | `/api/invitations`                         | Con sesión              | Mis invitaciones pendientes, con título, descripción y creador del grupo. |
 | `POST`   | `/api/invitations/{group_id}/accept`       | Invitado                | Acepta la invitación. 204.                                 |
 | `DELETE` | `/api/invitations/{group_id}`              | Invitado                | Rechaza la invitación. 204.                                |
+| `GET`    | `/api/groups/{group_id}/expenses`          | Miembro                 | Gastos del grupo con su pagador y sus repartos, los más recientes primero. |
+| `POST`   | `/api/groups/{group_id}/expenses`          | Creador                 | Crea un gasto (ver Gastos y repartos). 201 con el gasto.   |
 
-Pendientes en la API: `GET` y `POST /api/groups/{group_id}/expenses` (fase 4), liquidaciones (fase 5) y cierre y reapertura (fase 6).
+Pendientes en la API: editar y borrar gastos (fase 4), liquidaciones (fase 5) y cierre y reapertura (fase 6).
 
 - `POST /api/auth/login` recibe JSON: `{"login": "<email o nickname>", "password": "..."}`. El token caduca a los 60 minutos y no hay refresh token.
 - Los importes viajan como texto (`"176.66"`) para que sean exactos.
 - Los datos de usuario dentro de un grupo son id, nombre, apellidos y nickname. Nunca el email.
 - Errores de grupo, en este orden: 404 "Grupo no encontrado" (no existe o no eres miembro `accepted`), 403 "Solo el creador del grupo puede hacer esto" y 409 "El grupo está cerrado".
 - Autenticación: 401 "No autenticado" si falta la cabecera, "Token no válido o caducado" en el resto de casos y "Credenciales incorrectas" en el login.
-- Duplicados (email, nickname o invitación pendiente): 409. Datos no válidos: 422.
+- Duplicados (email, nickname o invitación pendiente): 409. Datos no válidos: 422. Los 422 de la API llegan de dos formas: con `detail` como texto (reglas del controlador, como el reparto de céntimos) o como lista de errores de Pydantic (reglas del modelo, con el mensaje en `msg` precedido de "Value error, ").
 
 ## Reglas de negocio (común)
 
@@ -259,7 +261,7 @@ Pendientes en la API: `GET` y `POST /api/groups/{group_id}/expenses` (fase 4), l
 ### Gastos y repartos
 
 - Solo el creador del grupo registra, edita y elimina gastos.
-- Cada gasto indica quién lo pagó (`paid_by`), que debe ser un miembro `accepted`.
+- Cada gasto indica quién lo pagó (`paid_by`), que debe ser un miembro `accepted`. Si el pagador o algún participante no es miembro `accepted`, la API responde 422 ("El pagador debe ser miembro del grupo" o "Todos los participantes deben ser miembros del grupo").
 - Hay tres modos de reparto:
   1. **Iguales entre todos**: el importe se divide a partes iguales entre todos los miembros `accepted` (en la interfaz aparecen todos marcados por defecto).
   2. **Iguales entre algunos**: el importe se divide a partes iguales solo entre los participantes seleccionados.
@@ -270,6 +272,7 @@ Pendientes en la API: `GET` y `POST /api/groups/{group_id}/expenses` (fase 4), l
 - Ninguna parte puede ser de 0 €. En el modo personalizado, cada parte debe ser mayor que 0. En el modo igual, si a algún participante le tocara 0 € (por ejemplo, 0,02 € entre 3), la API responde 422 "El importe es demasiado pequeño para repartirlo entre N personas".
 - Los gastos en los que aparece un miembro `left` (como pagador o como participante) no se pueden editar ni borrar: 409 "El gasto incluye a alguien que ya no es miembro del grupo y no se puede modificar". Si se pudieran, el saldo de ese ex miembro dejaría de ser 0 y, como ya no es miembro, no podría saldarlo.
 - La API valida, dentro de una transacción, que la suma de las partes sea exactamente igual al importe del gasto.
+- Al crear un gasto, los participantes se envían en una sola lista `shares` para los dos tipos de reparto: con `split_type = 'equal'`, cada parte lleva solo el `user_id` (la API calcula los importes); con `split_type = 'custom'`, el `user_id` y su `amount`. Un participante no puede aparecer dos veces.
 - En los repartos iguales no exactos, cada participante recibe primero la parte redondeada hacia abajo al céntimo, y los céntimos sobrantes se reparten de uno en uno empezando por el participante con menor `user_id`. Ejemplos: 10 € entre 3 → 3,34 + 3,33 + 3,33; 20 € entre 3 → 6,67 + 6,67 + 6,66.
 
 ### Liquidaciones
@@ -337,4 +340,4 @@ Cambio de planificación por la fecha de entrega (23/10/2026, antes de las 00:00
 - Bloque 1 (base y autenticación: navbar, footer, inicio, registro, login, guards e interceptor) ✅ completado.
 - Bloque 2 (grupos: listado "Mis grupos" con filtro activos/cerrados, creación de grupo y detalle con saldos, presupuesto y miembros) ✅ completado.
 - Bloque 3 (invitaciones: `/invitations` para aceptar o rechazar, e invitar y anular desde el detalle del grupo) ✅ completado.
-- Gastos (listado y creación) ⏳ pendiente; depende de la fase 4 de la API.
+- Gastos (listado y creación) ⏳ pendiente; la API ya tiene `GET` y `POST /api/groups/{group_id}/expenses`.
