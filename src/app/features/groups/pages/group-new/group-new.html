@@ -1,0 +1,62 @@
+<section class="panel mx-auto max-w-2xl p-6 sm:p-10">
+  <a routerLink="/groups" class="text-sm font-semibold text-muted hover:text-frost">← Mis grupos</a>
+  <h1 class="text-gradient mt-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Nuevo grupo</h1>
+  <p class="mt-2 text-muted">Después podrás invitar a tus amigos y apuntar los gastos.</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="mt-8 space-y-6" novalidate>
+    <div>
+      <label for="title" class="field-label">Título</label>
+      <input id="title" type="text" formControlName="title" class="field-input" placeholder="Viaje a Lisboa" />
+      @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+        <p class="field-error">Escribe un título para el grupo.</p>
+      }
+      @if (form.controls.title.hasError('maxlength')) {
+        <p class="field-error">El título no puede tener más de 100 caracteres.</p>
+      }
+    </div>
+
+    <div>
+      <label for="description" class="field-label">Descripción <span class="font-normal text-muted">(opcional)</span></label>
+      <textarea id="description" formControlName="description" rows="3" class="field-input resize-y"
+        placeholder="Para qué es el grupo y qué gastos vais a compartir"></textarea>
+      <p class="field-hint">{{ form.controls.description.value.length }} / 1000 caracteres</p>
+      @if (form.controls.description.hasError('maxlength')) {
+        <p class="field-error">La descripción no puede tener más de 1000 caracteres.</p>
+      }
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2">
+      <div>
+        <label for="budget" class="field-label">Presupuesto <span class="font-normal text-muted">(opcional)</span></label>
+        <input id="budget" type="text" inputmode="decimal" formControlName="budget" class="field-input" placeholder="1000,00" />
+        <p class="field-hint">Solo informativo: no cambia los saldos.</p>
+        @if (form.controls.budget.touched && form.controls.budget.hasError('budgetFormat')) {
+          <p class="field-error">Escribe un importe con 2 decimales como máximo, por ejemplo 150,50.</p>
+        }
+        @if (form.controls.budget.touched && form.controls.budget.hasError('budgetPositive')) {
+          <p class="field-error">El presupuesto debe ser mayor que 0.</p>
+        }
+      </div>
+
+      <div>
+        <label for="currency" class="field-label">Moneda</label>
+        <select id="currency" formControlName="currency" class="field-input">
+          @for (currency of currencies; track currency.value) {
+            <option [value]="currency.value">{{ currency.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="alert-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <div class="flex flex-wrap gap-3">
+      <button type="submit" class="btn btn-primary" [disabled]="loading()">
+        {{ loading() ? 'Creando grupo…' : 'Crear grupo' }}
+      </button>
+      <a routerLink="/groups" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</section>

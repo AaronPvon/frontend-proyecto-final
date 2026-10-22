@@ -1,0 +1,42 @@
+/* Cifra destacada de la cabecera (total gastado, miembros, creador) */
+.stat {
+  padding: 1rem 1.25rem;
+  border: 1px solid rgb(25 176 212 / 0.12);
+  border-radius: 1rem;
+  background-color: rgb(10 18 32 / 0.4);
+}
+
+.stat dt {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.stat dd {
+  margin-top: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+/* Iniciales del usuario en un círculo azul */
+.avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgb(25 176 212 / 0.3), rgb(29 78 216 / 0.3));
+  border: 1px solid rgb(25 176 212 / 0.35);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-frost);
+}
+
+.avatar-sm {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 0.75rem;
+}

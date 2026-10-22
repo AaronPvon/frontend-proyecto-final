@@ -1,0 +1,139 @@
+@if (loading()) {
+  <p class="text-muted">Cargando grupo…</p>
+} @else if (notFound()) {
+  <section class="panel mx-auto max-w-lg p-8 text-center sm:p-12">
+    <h1 class="text-gradient font-display text-3xl font-extrabold tracking-tight">Grupo no encontrado</h1>
+    <p class="mt-3 text-muted">El grupo no existe o no eres miembro de él.</p>
+    <a routerLink="/groups" class="btn btn-primary mt-6">Volver a mis grupos</a>
+  </section>
+} @else if (errorMessage()) {
+  <p class="alert-error" role="alert">{{ errorMessage() }}</p>
+} @else if (group(); as group) {
+  <!-- Cabecera del grupo -->
+  <header class="panel p-6 sm:p-8">
+    <a routerLink="/groups" [queryParams]="group.status === 'closed' ? { status: 'closed' } : {}"
+      class="text-sm font-semibold text-muted hover:text-frost">← Mis grupos</a>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <h1 class="text-gradient font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{{ group.title }}</h1>
+      @if (group.status === 'closed') {
+        <span class="badge">Cerrado</span>
+      }
+    </div>
+    @if (group.description) {
+      <p class="mt-3 max-w-2xl leading-relaxed text-muted">{{ group.description }}</p>
+    }
+
+    <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div class="stat">
+        <dt>Total gastado</dt>
+        <dd>{{ group.total_spent | currency: group.currency }}</dd>
+      </div>
+      <div class="stat">
+        <dt>Miembros</dt>
+        <dd>{{ group.members.length }}</dd>
+      </div>
+      <div class="stat">
+        <dt>Creado por</dt>
+        <dd class="truncate">{{ isCreator() ? 'Ti' : group.creator.name + ' ' + group.creator.lastname }}</dd>
+      </div>
+    </dl>
+
+    @if (group.status === 'closed') {
+      <p class="mt-6 rounded-xl border border-light-blue/25 bg-light-blue/10 px-4 py-3 text-sm text-frost">
+        Este grupo se cerró el {{ group.closed_at | date: 'longDate' }}. Solo se puede consultar.
+      </p>
+    }
+  </header>
+
+  <div class="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.4fr_1fr]">
+    <!-- Saldos -->
+    <section class="panel p-6 sm:p-8" aria-labelledby="balances-title">
+      <h2 id="balances-title" class="font-display text-xl font-semibold">Saldos</h2>
+      <p class="mt-1 text-sm text-muted">Se calculan con los gastos y las liquidaciones del grupo.</p>
+
+      <ul class="mt-5 space-y-3">
+        @for (balance of balances(); track balance.user_id) {
+          <li class="flex items-center gap-4 rounded-2xl border border-light-blue/10 bg-night/40 px-4 py-3">
+            <span class="avatar">{{ initials(balance.name, balance.lastname) }}</span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-semibold">
+                {{ balance.name }} {{ balance.lastname }}
+                @if (isMe(balance.user_id)) {
+                  <span class="badge ml-1">Tú</span>
+                }
+              </p>
+              <p class="truncate text-sm text-muted">
+                &#64;{{ balance.nickname }}
+                @if (balance.status === 'left') {
+                  · Ya no es miembro
+                }
+              </p>
+            </div>
+            <!-- El texto acompaña siempre al color, para no depender solo de él -->
+            <div class="text-right">
+              @switch (balance.kind) {
+                @case ('owed') {
+                  <p class="text-xs text-muted">Le deben</p>
+                  <p class="font-display text-lg font-bold text-owed">{{ balance.amount | currency: group.currency }}</p>
+                }
+                @case ('owes') {
+                  <p class="text-xs text-muted">Debe</p>
+                  <p class="font-display text-lg font-bold text-owes">{{ balance.amount | currency: group.currency }}</p>
+                }
+                @default {
+                  <p class="font-display text-sm font-semibold text-muted">Está al día</p>
+                }
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <div class="space-y-6">
+      <!-- Presupuesto: solo si el grupo tiene uno -->
+      @if (budget(); as budget) {
+        <section class="panel p-6 sm:p-8" aria-labelledby="budget-title">
+          <h2 id="budget-title" class="font-display text-xl font-semibold">Presupuesto</h2>
+          <p class="mt-3 text-sm text-muted">
+            <span class="font-display text-2xl font-bold text-frost">{{ budget.spent | currency: group.currency }}</span>
+            de {{ budget.total | currency: group.currency }}
+          </p>
+          <div class="mt-4 h-3 overflow-hidden rounded-full bg-night/70" role="progressbar"
+            [attr.aria-valuenow]="budget.percent" aria-valuemin="0" aria-valuemax="100" aria-label="Gasto frente al presupuesto">
+            <div class="h-full rounded-full transition-all"
+              [class]="budget.exceeded ? 'bg-orange' : 'bg-linear-to-r from-light-blue to-deep-blue'"
+              [style.width.%]="budget.percent"></div>
+          </div>
+          @if (budget.exceeded) {
+            <p class="mt-3 text-sm font-semibold text-orange">
+              Se ha superado el presupuesto en {{ -budget.remaining | currency: group.currency }}.
+            </p>
+          } @else {
+            <p class="mt-3 text-sm text-muted">Quedan {{ budget.remaining | currency: group.currency }}.</p>
+          }
+        </section>
+      }
+
+      <!-- Miembros -->
+      <section class="panel p-6 sm:p-8" aria-labelledby="members-title">
+        <h2 id="members-title" class="font-display text-xl font-semibold">Miembros</h2>
+        <ul class="mt-4 space-y-3">
+          @for (member of group.members; track member.id) {
+            <li class="flex items-center gap-3">
+              <span class="avatar avatar-sm">{{ initials(member.name, member.lastname) }}</span>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold">{{ member.name }} {{ member.lastname }}</p>
+                <p class="truncate text-xs text-muted">&#64;{{ member.nickname }}</p>
+              </div>
+              @if (member.id === group.creator.id) {
+                <span class="badge ml-auto">Creador</span>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+  </div>
+}

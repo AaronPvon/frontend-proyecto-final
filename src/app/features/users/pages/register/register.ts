@@ -10,14 +10,11 @@ import {
 import { Router, RouterLink } from '@angular/router';
 
 import { getErrorMessage } from '../../../../core/utils/api-error';
+import { notBlank } from '../../../../core/utils/validators';
 import { AuthService } from '../../services/auth.service';
 
 // Mismo patrón que la API: letras sin tildes ni ñ, números, _ . -
 const NICKNAME_PATTERN = /^[A-Za-z0-9_.-]{3,50}$/;
-
-// Un campo con solo espacios cuenta como vacío (la API quita los espacios)
-const notBlank: ValidatorFn = (control: AbstractControl): ValidationErrors | null =>
-  control.value.trim() === '' ? { required: true } : null;
 
 // Las dos contraseñas deben coincidir
 const passwordsMatch: ValidatorFn = (group: AbstractControl): ValidationErrors | null =>

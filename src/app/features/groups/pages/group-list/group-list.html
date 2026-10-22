@@ -1,0 +1,70 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h1 class="text-gradient font-display text-4xl font-extrabold tracking-tight">Mis grupos</h1>
+    <p class="mt-2 text-muted">Los grupos de gastos de los que eres miembro.</p>
+  </div>
+  <a routerLink="/groups/new" class="btn btn-primary">Nuevo grupo</a>
+</header>
+
+<!-- Filtro: activos o cerrados -->
+<nav class="panel mt-8 inline-flex gap-1 rounded-2xl p-1.5" aria-label="Filtrar grupos">
+  <a routerLink="/groups" class="filter-tab" [class.filter-tab-active]="filter() === 'active'"
+    [attr.aria-current]="filter() === 'active' ? 'page' : null">Activos</a>
+  <a routerLink="/groups" [queryParams]="{ status: 'closed' }" class="filter-tab"
+    [class.filter-tab-active]="filter() === 'closed'"
+    [attr.aria-current]="filter() === 'closed' ? 'page' : null">Cerrados</a>
+</nav>
+
+<section class="mt-6" aria-live="polite">
+  @if (loading()) {
+    <p class="text-muted">Cargando grupos…</p>
+  } @else if (errorMessage()) {
+    <p class="alert-error" role="alert">{{ errorMessage() }}</p>
+  } @else if (groups().length === 0) {
+    <div class="panel p-8 text-center sm:p-12">
+      @if (filter() === 'active') {
+        <h2 class="font-display text-xl font-semibold">Aún no tienes grupos activos</h2>
+        <p class="mx-auto mt-2 max-w-md text-muted">
+          Crea uno para el próximo viaje o los gastos del piso. Si alguien te ha invitado a un grupo,
+          acepta la invitación en <a routerLink="/invitations" class="link">Invitaciones</a>.
+        </p>
+        <a routerLink="/groups/new" class="btn btn-primary mt-6">Crear un grupo</a>
+      } @else {
+        <h2 class="font-display text-xl font-semibold">No tienes grupos cerrados</h2>
+        <p class="mt-2 text-muted">Cuando el creador de un grupo lo cierre, aparecerá aquí.</p>
+      }
+    </div>
+  } @else {
+    <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      @for (group of groups(); track group.id) {
+        <li>
+          <a [routerLink]="['/groups', group.id]" class="panel group-card flex h-full flex-col p-6">
+            <div class="flex items-start justify-between gap-3">
+              <h2 class="font-display text-lg font-semibold">{{ group.title }}</h2>
+              @if (group.status === 'closed') {
+                <span class="badge">Cerrado</span>
+              }
+            </div>
+            @if (group.description) {
+              <p class="mt-2 line-clamp-2 text-sm text-muted">{{ group.description }}</p>
+            }
+            <p class="mt-auto pt-5 text-sm text-muted">
+              @if (isMine(group)) {
+                Lo creaste tú
+              } @else {
+                Creado por {{ group.creator.name }} {{ group.creator.lastname }}
+              }
+            </p>
+            <p class="text-sm text-muted">
+              @if (group.status === 'closed' && group.closed_at) {
+                Cerrado el {{ group.closed_at | date: 'longDate' }}
+              } @else {
+                Creado el {{ group.created_at | date: 'longDate' }}
+              }
+            </p>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>

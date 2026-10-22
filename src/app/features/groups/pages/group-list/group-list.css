@@ -1,0 +1,28 @@
+.filter-tab {
+  display: inline-block;
+  padding: 0.45rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  transition: color 150ms, background-color 150ms;
+}
+
+.filter-tab:hover {
+  color: var(--color-frost);
+}
+
+.filter-tab-active {
+  color: var(--color-light-blue);
+  background-color: rgb(25 176 212 / 0.14);
+}
+
+/* Las tarjetas de grupo suben un poco y brillan más al pasar por encima */
+.group-card {
+  transition: transform 200ms, border-color 200ms;
+}
+
+.group-card:hover {
+  transform: translateY(-4px);
+  border-color: rgb(25 176 212 / 0.5);
+}

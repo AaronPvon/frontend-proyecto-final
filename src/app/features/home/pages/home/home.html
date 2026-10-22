@@ -2,9 +2,9 @@
   <div class="max-w-xl">
     <h1 class="text-gradient font-display text-5xl leading-[1.05] font-extrabold tracking-tight sm:text-6xl">
       @if (auth.currentUser(); as user) {
-        ¡Bienvenido/a, {{ user.name }}!
+        ¡Bienvenido, {{ user.name }}!
       } @else {
-        ¡Bienvenido/a!
+        ¡Bienvenido!
       }
     </h1>
     <p class="mt-5 text-lg leading-relaxed text-muted">
