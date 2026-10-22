@@ -18,7 +18,7 @@ El proyecto se basa en el enunciado **"Compartir gastos"**.
 | Base y autenticación: navbar, footer, inicio, registro, login, guards e interceptor | ✅ Completado |
 | Grupos: "Mis grupos" con filtro activos/cerrados, creación y detalle con saldos, presupuesto y miembros | ✅ Completado |
 | Invitaciones: aceptarlas o rechazarlas, e invitar y anular desde el detalle del grupo | ✅ Completado |
-| Gastos: listado y creación | ⏳ Pendiente |
+| Gastos: listado en el detalle del grupo y creación con los tres modos de reparto | ✅ Completado |
 | Editar y borrar gastos, liquidaciones, cierre y reapertura, salir y expulsar | ⏳ Después de la entrega |
 | Despliegue | ⏳ Pendiente |
 
@@ -135,7 +135,8 @@ La app muestra siempre un navbar, el contenido y un footer. El navbar enlaza a I
 | `/register` | Pública (sin sesión) | Registro: nombre, apellidos, nickname, email, contraseña y repetir contraseña. Después redirige a `/login?registered=1`. |
 | `/groups` | Privada | "Mis grupos", con filtro de activos (por defecto) y cerrados (`/groups?status=closed`). |
 | `/groups/new` | Privada | Creación de un grupo: título, descripción, presupuesto (opcional) y moneda. Después redirige al detalle. |
-| `/groups/:id` | Privada (miembros) | Detalle del grupo: saldos, presupuesto, miembros e invitaciones pendientes. El creador invita por email o nickname y anula invitaciones. Un grupo ajeno o inexistente muestra "Grupo no encontrado". |
+| `/groups/:id` | Privada (miembros) | Detalle del grupo: saldos, gastos (con el reparto de cada uno), presupuesto, miembros e invitaciones pendientes. El creador apunta gastos, invita por email o nickname y anula invitaciones. Un grupo ajeno o inexistente muestra "Grupo no encontrado". |
+| `/groups/:id/expenses/new` | Privada (creador) | Nuevo gasto: concepto, importe, fecha, quién lo pagó y reparto (iguales entre todos, entre algunos o personalizado), con vista previa de la parte de cada uno. Después vuelve al detalle del grupo. |
 | `/invitations` | Privada | Invitaciones pendientes, para aceptarlas (con un enlace al grupo) o rechazarlas. |
 
 ## Autenticación

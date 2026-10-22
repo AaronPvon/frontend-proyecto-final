@@ -92,6 +92,62 @@
       </ul>
     </section>
 
+      <!-- Gastos: los ven todos los miembros; solo el creador apunta gastos -->
+      <section class="panel p-6 sm:p-8" aria-labelledby="expenses-title">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="expenses-title" class="font-display text-xl font-semibold">
+            Gastos <span class="text-base font-normal text-muted">({{ expenses().length }})</span>
+          </h2>
+          @if (canManage()) {
+            <a [routerLink]="['/groups', group.id, 'expenses', 'new']" class="btn btn-primary px-4 py-2 text-sm">Nuevo gasto</a>
+          }
+        </div>
+
+        @if (expenses().length === 0) {
+          <p class="mt-4 text-sm text-muted">
+            Aún no hay gastos.
+            @if (canManage()) {
+              Apunta el primero con «Nuevo gasto».
+            }
+          </p>
+        } @else {
+          <ul class="mt-4 space-y-3">
+            @for (expense of expenses(); track expense.id) {
+              <li>
+                <!-- details/summary: se despliega sin JavaScript y es accesible con el teclado -->
+                <details class="expense rounded-2xl border border-light-blue/10 bg-night/40">
+                  <summary class="flex cursor-pointer items-center gap-4 px-4 py-3">
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate font-semibold">{{ expense.title }}</p>
+                      <p class="truncate text-sm text-muted">
+                        {{ expense.expense_date | date: 'd MMM y' }}, pagó {{ isMe(expense.paid_by.id) ? 'tú' : expense.paid_by.name }}
+                      </p>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-display text-lg font-bold">{{ expense.amount | currency: group.currency }}</p>
+                      <p class="text-xs text-muted">{{ expense.split_type === 'equal' ? 'A partes iguales' : 'Personalizado' }}</p>
+                    </div>
+                  </summary>
+                  <div class="border-t border-light-blue/10 px-4 py-3">
+                    @if (expense.description) {
+                      <p class="mb-3 text-sm text-muted">{{ expense.description }}</p>
+                    }
+                    <ul class="space-y-1.5 text-sm">
+                      @for (share of expense.shares; track share.user.id) {
+                        <li class="flex justify-between gap-3">
+                          <span class="truncate">{{ share.user.name }} {{ share.user.lastname }}</span>
+                          <span class="font-semibold">{{ share.amount | currency: group.currency }}</span>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                </details>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
       <!-- Invitaciones pendientes: las ven todos los miembros; solo el creador invita y anula -->
       <section class="panel p-6 sm:p-8" aria-labelledby="invitations-title">
         <h2 id="invitations-title" class="font-display text-xl font-semibold">Invitaciones pendientes</h2>

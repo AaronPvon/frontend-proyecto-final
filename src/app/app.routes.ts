@@ -4,6 +4,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { GroupDetailPage } from './features/groups/pages/group-detail/group-detail';
 import { GroupList } from './features/groups/pages/group-list/group-list';
+import { ExpenseNew } from './features/groups/pages/expense-new/expense-new';
 import { GroupNew } from './features/groups/pages/group-new/group-new';
 import { Invitations } from './features/groups/pages/invitations/invitations';
 import { Home } from './features/home/pages/home/home';
@@ -18,6 +19,7 @@ export const routes: Routes = [
   // "new" va antes que ":id" para que no se tome como un id
   { path: 'groups/new', component: GroupNew, canActivate: [authGuard], title: 'Nuevo grupo | A Pachas' },
   { path: 'groups/:id', component: GroupDetailPage, canActivate: [authGuard], title: 'Grupo | A Pachas' },
+  { path: 'groups/:id/expenses/new', component: ExpenseNew, canActivate: [authGuard], title: 'Nuevo gasto | A Pachas' },
   { path: 'invitations', component: Invitations, canActivate: [authGuard], title: 'Invitaciones | A Pachas' },
   { path: '**', redirectTo: '' },
 ];

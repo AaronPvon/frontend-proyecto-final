@@ -116,6 +116,7 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 | `/groups`      | Privada            | Listado "Mis grupos": grupos en los que el usuario es miembro `accepted`. Tiene un filtro que por defecto muestra los grupos activos; los cerrados se consultan cambiando el filtro y se abren en modo solo lectura. Botón para crear grupo. |
 | `/groups/new`  | Privada            | Formulario de creación de grupo: título, descripción, presupuesto (opcional) y moneda.                                                                                                                                                       |
 | `/groups/:id`  | Privada (miembros) | Detalle del grupo: gastos, liquidaciones, saldos, miembros, invitaciones pendientes y, si existe, progreso del gasto frente al presupuesto. El creador ve además los controles de gestión.                                                   |
+| `/groups/:id/expenses/new` | Privada (creador) | Formulario de nuevo gasto: concepto, importe, fecha, pagador, modo de reparto y participantes. |
 | `/invitations` | Privada            | Invitaciones pendientes del usuario, con opción de aceptar o rechazar.                                                                                                                                                                       |
 
 ### Tecnología y configuración
@@ -133,7 +134,7 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 - `public/logo.svg`: logotipo y favicon.
 - `src/environments/environment.ts`: URL de la API.
 - `src/styles.css`: tokens de Tailwind y clases reutilizables de CSS propio (`field-input`, `btn`, `alert-error`, `.panel`, `.text-gradient`...).
-- Estructura de `src/app/`: `core/` (`components/`, `guards/`, `interceptors/`, `interfaces/` y `utils/`) y `features/` con una carpeta por funcionalidad (`home/`, `users/` y `groups/`), cada una con `pages/` y, si los necesita, `services/` (`home/` no tiene). Los validadores de formulario compartidos (`notBlank`) están en `core/utils/validators.ts`.
+- Estructura de `src/app/`: `core/` (`components/`, `guards/`, `interceptors/`, `interfaces/` y `utils/`) y `features/` con una carpeta por funcionalidad (`home/`, `users/` y `groups/`), cada una con `pages/` y, si los necesita, `services/` (`home/` no tiene). Los validadores de formulario compartidos (`notBlank`, `amountValidator` y `notFuture`) están en `core/utils/validators.ts`, y los cálculos con importes en `core/utils/money.ts`.
 
 ### Autenticación en el cliente
 
@@ -156,6 +157,19 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 - Al crear un grupo, se redirige a su detalle.
 - `/groups/abc` (422) y un grupo ajeno o inexistente (404) muestran el mismo mensaje: "Grupo no encontrado".
 - Al abrir la página del grupo, las peticiones de cada parte (detalle, saldos, invitaciones...) se lanzan a la vez con `forkJoin`.
+
+### Páginas de gastos
+
+- Las peticiones de gastos están en `ExpensesService` (`features/groups/services/`).
+- El detalle del grupo tiene una sección "Gastos" que ven todos los miembros, también con el grupo cerrado: cada gasto muestra el concepto, la fecha, quién lo pagó, el importe y el tipo de reparto, y se despliega (`<details>`) para ver la parte de cada participante. El botón "Nuevo gasto" solo se muestra al creador y con el grupo activo.
+- Nuevo gasto es una página aparte (`/groups/:id/expenses/new`). Si quien entra no es el creador o el grupo está cerrado, la página lo explica y enlaza al grupo; la API lo rechaza igualmente.
+- Por defecto, el gasto lo pagó el usuario actual, la fecha es la de hoy (el selector no deja elegir fechas futuras) y el modo es "Iguales entre todos".
+- Los tres modos de reparto se eligen con tarjetas. En "Iguales entre algunos" se marcan los participantes con casillas; en "Personalizado" se escribe el importe de cada uno, y quien lo deja vacío no participa.
+- En los modos iguales hay una vista previa con la parte de cada participante, calculada con la misma regla de céntimos que la API (`splitEqually`). En el personalizado se muestra cuánto se ha asignado y cuánto falta o sobra.
+- Antes de enviar, el front-end comprueba que haya al menos un participante, que el reparto igual no deje a nadie con 0 € y que el personalizado sume exactamente el importe. La API lo vuelve a comprobar.
+- Los importes del formulario se convierten a céntimos enteros (`parseCents`) para sumarlos y repartirlos sin errores de coma flotante, y se envían a la API como texto con punto (`centsToApi`).
+- Tras guardar, se vuelve al detalle del grupo, que pide de nuevo gastos, saldos y total gastado.
+- `getErrorMessage` muestra también los 422 de Pydantic de las reglas propias del modelo (`type` `value_error`), quitando el prefijo "Value error, ". Los demás errores de validación de Pydantic, en inglés, se sustituyen por un mensaje genérico.
 
 ### Páginas de invitaciones
 
@@ -340,4 +354,4 @@ Cambio de planificación por la fecha de entrega (23/10/2026, antes de las 00:00
 - Bloque 1 (base y autenticación: navbar, footer, inicio, registro, login, guards e interceptor) ✅ completado.
 - Bloque 2 (grupos: listado "Mis grupos" con filtro activos/cerrados, creación de grupo y detalle con saldos, presupuesto y miembros) ✅ completado.
 - Bloque 3 (invitaciones: `/invitations` para aceptar o rechazar, e invitar y anular desde el detalle del grupo) ✅ completado.
-- Gastos (listado y creación) ⏳ pendiente; la API ya tiene `GET` y `POST /api/groups/{group_id}/expenses`.
+- Bloque 5 (gastos: listado en el detalle del grupo y creación con los tres modos de reparto) ✅ completado.

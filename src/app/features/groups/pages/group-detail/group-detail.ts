@@ -7,11 +7,13 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 
+import { Expense } from '../../../../core/interfaces/expense.interface';
 import { Balance, GroupDetail } from '../../../../core/interfaces/group.interface';
 import { GroupInvitation } from '../../../../core/interfaces/invitation.interface';
 import { getErrorMessage } from '../../../../core/utils/api-error';
 import { notBlank } from '../../../../core/utils/validators';
 import { AuthService } from '../../../users/services/auth.service';
+import { ExpensesService } from '../../services/expenses.service';
 import { GroupsService } from '../../services/groups.service';
 import { InvitationsService } from '../../services/invitations.service';
 
@@ -31,6 +33,7 @@ interface BalanceView extends Balance {
 export class GroupDetailPage {
   private readonly groupsService = inject(GroupsService);
   private readonly invitationsService = inject(InvitationsService);
+  private readonly expensesService = inject(ExpensesService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly title = inject(Title);
   protected readonly auth = inject(AuthService);
@@ -40,6 +43,7 @@ export class GroupDetailPage {
 
   protected readonly group = signal<GroupDetail | null>(null);
   protected readonly balances = signal<BalanceView[]>([]);
+  protected readonly expenses = signal<Expense[]>([]);
   protected readonly loading = signal(true);
   protected readonly notFound = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -100,6 +104,7 @@ export class GroupDetailPage {
             group: this.groupsService.getGroup(id),
             balances: this.groupsService.getBalances(id),
             invitations: this.invitationsService.getGroupInvitations(id),
+            expenses: this.expensesService.getExpenses(id),
           }).pipe(
             map((data) => ({ data, error: null as unknown })),
             catchError((error) => of({ data: null, error: error as unknown })),
@@ -113,6 +118,7 @@ export class GroupDetailPage {
           this.group.set(data.group);
           this.balances.set(data.balances.map(toBalanceView));
           this.invitations.set(data.invitations);
+          this.expenses.set(data.expenses);
           this.title.setTitle(`${data.group.title} | A Pachas`);
           return;
         }

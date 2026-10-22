@@ -1,0 +1,167 @@
+@if (loading()) {
+  <p class="text-muted">Cargando grupo…</p>
+} @else if (notFound()) {
+  <section class="panel mx-auto max-w-lg p-8 text-center sm:p-12">
+    <h1 class="text-gradient font-display text-3xl font-extrabold tracking-tight">Grupo no encontrado</h1>
+    <p class="mt-3 text-muted">El grupo no existe o no eres miembro de él.</p>
+    <a routerLink="/groups" class="btn btn-primary mt-6">Volver a mis grupos</a>
+  </section>
+} @else if (errorMessage()) {
+  <p class="alert-error" role="alert">{{ errorMessage() }}</p>
+} @else if (group(); as group) {
+  @if (!canManage()) {
+    <section class="panel mx-auto max-w-lg p-8 text-center sm:p-12">
+      <h1 class="text-gradient font-display text-3xl font-extrabold tracking-tight">No puedes apuntar gastos</h1>
+      <p class="mt-3 text-muted">
+        @if (group.status === 'closed') {
+          El grupo está cerrado: solo se puede consultar.
+        } @else {
+          Solo el creador del grupo puede apuntar gastos.
+        }
+      </p>
+      <a [routerLink]="['/groups', group.id]" class="btn btn-primary mt-6">Volver al grupo</a>
+    </section>
+  } @else {
+    <section class="panel mx-auto max-w-2xl p-6 sm:p-10">
+      <a [routerLink]="['/groups', group.id]" class="text-sm font-semibold text-muted hover:text-frost">← {{ group.title }}</a>
+      <h1 class="text-gradient mt-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Nuevo gasto</h1>
+      <p class="mt-2 text-muted">Apunta lo que pagó un miembro y cómo se reparte.</p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="mt-8 space-y-6" novalidate>
+        <div>
+          <label for="title" class="field-label">Concepto</label>
+          <input id="title" type="text" formControlName="title" class="field-input" placeholder="Cena del sábado" />
+          @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+            <p class="field-error">Escribe el concepto del gasto.</p>
+          }
+          @if (form.controls.title.hasError('maxlength')) {
+            <p class="field-error">Máximo 100 caracteres.</p>
+          }
+        </div>
+
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label for="amount" class="field-label">Importe ({{ group.currency }})</label>
+            <input id="amount" type="text" inputmode="decimal" formControlName="amount" class="field-input" placeholder="20,00" />
+            @if (form.controls.amount.touched && form.controls.amount.hasError('required')) {
+              <p class="field-error">Escribe el importe.</p>
+            }
+            @if (form.controls.amount.touched && form.controls.amount.hasError('amountFormat')) {
+              <p class="field-error">Escribe un importe con 2 decimales como máximo, por ejemplo 20,50.</p>
+            }
+            @if (form.controls.amount.touched && form.controls.amount.hasError('amountPositive')) {
+              <p class="field-error">El importe debe ser mayor que 0.</p>
+            }
+          </div>
+
+          <div>
+            <label for="expenseDate" class="field-label">Fecha</label>
+            <input id="expenseDate" type="date" formControlName="expenseDate" class="field-input" [max]="maxDate" />
+            @if (form.controls.expenseDate.touched && form.controls.expenseDate.hasError('required')) {
+              <p class="field-error">Elige la fecha del gasto.</p>
+            }
+            @if (form.controls.expenseDate.hasError('future')) {
+              <p class="field-error">La fecha no puede ser futura.</p>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label for="paidBy" class="field-label">Lo pagó</label>
+          <select id="paidBy" formControlName="paidBy" class="field-input">
+            @for (member of members(); track member.id) {
+              <option [ngValue]="member.id">{{ member.name }} {{ member.lastname }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Modo de reparto -->
+        <fieldset>
+          <legend class="field-label">¿Cómo se reparte?</legend>
+          <div class="grid gap-3 sm:grid-cols-3">
+            @for (option of modes; track option.value) {
+              <label class="mode-option" [class.mode-option-active]="mode() === option.value">
+                <input type="radio" formControlName="mode" [value]="option.value" class="sr-only" />
+                <span class="font-semibold">{{ option.label }}</span>
+                <span class="mt-1 text-xs text-muted">{{ option.hint }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <!-- Participantes y parte de cada uno -->
+        <div class="rounded-2xl border border-light-blue/15 bg-night/40 p-4 sm:p-5">
+          @if (mode() === 'custom') {
+            <ul class="space-y-3" formGroupName="customAmounts">
+              @for (member of members(); track member.id) {
+                <li class="flex items-center gap-3">
+                  <label [for]="'custom-' + member.id" class="min-w-0 flex-1 truncate text-sm font-semibold">
+                    {{ member.name }} {{ member.lastname }}
+                  </label>
+                  <input [id]="'custom-' + member.id" type="text" inputmode="decimal" [formControlName]="member.id.toString()"
+                    class="field-input w-32 text-right" placeholder="0,00" [class.border-owes]="fieldInvalid(member.id)" />
+                </li>
+              }
+            </ul>
+            <p class="mt-4 text-sm" [class.text-owed]="custom().remaining === 0 && !custom().invalid" [class.text-muted]="custom().remaining !== 0">
+              Asignado {{ custom().assigned / 100 | currency: group.currency }}
+              de {{ (amountCents() ?? 0) / 100 | currency: group.currency }}.
+              @if (custom().remaining > 0) {
+                Faltan {{ custom().remaining / 100 | currency: group.currency }}.
+              } @else if (custom().remaining < 0) {
+                Sobran {{ -custom().remaining / 100 | currency: group.currency }}.
+              }
+            </p>
+            <p class="field-hint">Deja vacío el importe de quien no participa.</p>
+          } @else {
+            <ul class="space-y-2" formGroupName="participants">
+              @for (member of members(); track member.id) {
+                <li class="flex items-center gap-3">
+                  @if (mode() === 'some') {
+                    <input [id]="'part-' + member.id" type="checkbox" [formControlName]="member.id.toString()"
+                      class="size-4 accent-light-blue" />
+                  }
+                  <label [for]="'part-' + member.id" class="min-w-0 flex-1 truncate text-sm font-semibold"
+                    [class.text-muted]="!preview()?.shares?.has(member.id)">
+                    {{ member.name }} {{ member.lastname }}
+                  </label>
+                  <span class="font-display text-sm font-semibold">
+                    @if (preview()?.shares?.get(member.id); as cents) {
+                      {{ cents / 100 | currency: group.currency }}
+                    } @else {
+                      <span class="text-muted">—</span>
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+            @if (preview()?.tooSmall) {
+              <p class="field-error mt-3">El importe es demasiado pequeño para repartirlo entre {{ participantIds().length }} personas.</p>
+            } @else {
+              <p class="field-hint mt-3">Vista previa: si no sale exacto, el céntimo sobrante va al primer miembro de la lista.</p>
+            }
+          }
+        </div>
+
+        <div>
+          <label for="description" class="field-label">Descripción <span class="font-normal text-muted">(opcional)</span></label>
+          <textarea id="description" formControlName="description" rows="2" class="field-input resize-y"></textarea>
+          @if (form.controls.description.hasError('maxlength')) {
+            <p class="field-error">Máximo 1000 caracteres.</p>
+          }
+        </div>
+
+        @if (submitError()) {
+          <p class="alert-error" role="alert">{{ submitError() }}</p>
+        }
+
+        <div class="flex flex-wrap gap-3">
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            {{ saving() ? 'Guardando…' : 'Guardar gasto' }}
+          </button>
+          <a [routerLink]="['/groups', group.id]" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </section>
+  }
+}

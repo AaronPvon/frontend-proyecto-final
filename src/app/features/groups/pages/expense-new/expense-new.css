@@ -1,0 +1,27 @@
+/* Cada modo de reparto es una tarjeta seleccionable (el radio está oculto pero accesible) */
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgb(25 176 212 / 0.2);
+  border-radius: 1rem;
+  background-color: rgb(10 18 32 / 0.5);
+  cursor: pointer;
+  transition: border-color 150ms, background-color 150ms;
+}
+
+.mode-option:hover {
+  border-color: rgb(25 176 212 / 0.5);
+}
+
+.mode-option-active {
+  border-color: var(--color-light-blue);
+  background-color: rgb(25 176 212 / 0.12);
+  box-shadow: 0 0 0 1px var(--color-light-blue);
+}
+
+/* Foco visible con el teclado sobre el radio oculto */
+.mode-option:has(input:focus-visible) {
+  outline: 2px solid var(--color-light-blue);
+  outline-offset: 3px;
+}
