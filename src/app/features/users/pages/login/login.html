@@ -1,0 +1,42 @@
+<section class="panel mx-auto max-w-lg p-6 sm:p-10">
+  <h1 class="text-gradient font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Iniciar sesión</h1>
+  <p class="mt-2 text-muted">Entra con tu email o tu nickname.</p>
+
+  @if (justRegistered) {
+    <p class="alert-success mt-6" role="status">Cuenta creada. Ya puedes iniciar sesión.</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="mt-6 space-y-5" novalidate>
+    <div>
+      <label for="login" class="field-label">Email o nickname</label>
+      <input id="login" type="text" formControlName="login" class="field-input" autocomplete="username" />
+      @if (form.controls.login.touched && form.controls.login.hasError('required')) {
+        <p class="field-error">Escribe tu email o tu nickname.</p>
+      }
+    </div>
+
+    <div>
+      <label for="password" class="field-label">Contraseña</label>
+      <input id="password" type="password" formControlName="password" class="field-input" autocomplete="current-password" />
+      @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        <p class="field-error">Escribe tu contraseña.</p>
+      }
+      @if (form.controls.password.hasError('maxlength')) {
+        <p class="field-error">La contraseña no puede tener más de 128 caracteres.</p>
+      }
+    </div>
+
+    @if (errorMessage()) {
+      <p class="alert-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <button type="submit" class="btn btn-primary w-full" [disabled]="loading()">
+      {{ loading() ? 'Iniciando sesión…' : 'Iniciar sesión' }}
+    </button>
+  </form>
+
+  <p class="mt-6 text-sm text-muted">
+    ¿Aún no tienes cuenta?
+    <a routerLink="/register" class="link">Crea una</a>
+  </p>
+</section>

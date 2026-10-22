@@ -1,0 +1,98 @@
+<section class="panel mx-auto max-w-lg p-6 sm:p-10">
+  <h1 class="text-gradient font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Crear una cuenta</h1>
+  <p class="mt-2 text-muted">Con tu cuenta podrás crear grupos y recibir invitaciones de tus amigos.</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="mt-6 space-y-5" novalidate>
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div>
+        <label for="name" class="field-label">Nombre</label>
+        <input id="name" type="text" formControlName="name" class="field-input" autocomplete="given-name" />
+        @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+          <p class="field-error">Escribe tu nombre.</p>
+        }
+        @if (form.controls.name.hasError('maxlength')) {
+          <p class="field-error">Máximo 100 caracteres.</p>
+        }
+      </div>
+
+      <div>
+        <label for="lastname" class="field-label">Apellidos</label>
+        <input id="lastname" type="text" formControlName="lastname" class="field-input" autocomplete="family-name" />
+        @if (form.controls.lastname.touched && form.controls.lastname.hasError('required')) {
+          <p class="field-error">Escribe tus apellidos.</p>
+        }
+        @if (form.controls.lastname.hasError('maxlength')) {
+          <p class="field-error">Máximo 150 caracteres.</p>
+        }
+      </div>
+    </div>
+
+    <div>
+      <label for="nickname" class="field-label">Nickname</label>
+      <input id="nickname" type="text" formControlName="nickname" class="field-input" autocomplete="username" />
+      <!-- <p class="field-hint">Entre 3 y 50 caracteres: letras sin tildes, números, guion, punto o guion bajo.</p> -->
+      @if (form.controls.nickname.touched && form.controls.nickname.hasError('required')) {
+        <p class="field-error">Elige un nickname.</p>
+      }
+      @if (form.controls.nickname.touched && form.controls.nickname.hasError('pattern')) {
+        <p class="field-error">El nickname no cumple el formato indicado.</p>
+      }
+    </div>
+
+    <div>
+      <label for="email" class="field-label">Email</label>
+      <input id="email" type="email" formControlName="email" class="field-input" autocomplete="email" />
+      @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+        <p class="field-error">Escribe tu email.</p>
+      }
+      @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+        <p class="field-error">El email no tiene un formato válido.</p>
+      }
+    </div>
+
+    <div>
+      <label for="password" class="field-label">Contraseña</label>
+      <input id="password" type="password" formControlName="password" class="field-input" autocomplete="new-password" />
+      <!-- <p class="field-hint">Entre 8 y 128 caracteres.</p> -->
+      @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        <p class="field-error">Escribe una contraseña.</p>
+      }
+      @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+        <p class="field-error">La contraseña debe tener al menos 8 caracteres.</p>
+      }
+      @if (form.controls.password.hasError('maxlength')) {
+        <p class="field-error">La contraseña no puede tener más de 128 caracteres.</p>
+      }
+    </div>
+
+    <div>
+      <label for="repeatPassword" class="field-label">Repetir contraseña</label>
+      <input
+        id="repeatPassword"
+        type="password"
+        formControlName="repeatPassword"
+        class="field-input"
+        [class.border-owes]="form.controls.repeatPassword.touched && form.hasError('passwordsMismatch')"
+        autocomplete="new-password"
+      />
+      @if (form.controls.repeatPassword.touched && form.controls.repeatPassword.hasError('required')) {
+        <p class="field-error">Repite la contraseña.</p>
+      } @else if (form.controls.repeatPassword.touched && form.hasError('passwordsMismatch')) {
+        <p class="field-error">Las contraseñas no coinciden.</p>
+      }
+    </div>
+
+    @if (errorMessage()) {
+      <p class="alert-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <button type="submit" class="btn btn-primary w-full" [disabled]="loading()">
+      {{ loading() ? 'Creando cuenta…' : 'Crear cuenta' }}
+    </button>
+  </form>
+
+  <p class="mt-6 text-sm text-muted">
+    ¿Ya tienes cuenta?
+    <a routerLink="/login" class="link">Inicia sesión</a>
+  </p>
+</section>

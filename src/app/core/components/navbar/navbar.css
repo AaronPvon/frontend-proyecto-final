@@ -1,0 +1,18 @@
+.nav-link {
+  display: inline-block;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.75rem;
+  color: var(--color-muted);
+  transition: color 150ms, background-color 150ms;
+}
+
+.nav-link:hover {
+  color: var(--color-frost);
+  background-color: rgb(25 176 212 / 0.08);
+}
+
+/* Enlace de la página actual: pastilla azul clara */
+.nav-active {
+  color: var(--color-light-blue);
+  background-color: rgb(25 176 212 / 0.14);
+}

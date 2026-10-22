@@ -1,0 +1,25 @@
+<!-- Barra flotante: se separa del borde superior y se queda fija al hacer scroll -->
+<header class="sticky top-0 z-10 px-4 pt-4">
+  <nav class="panel mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-2xl px-4 py-2.5">
+    <a routerLink="/" class="flex items-center gap-2.5 font-display text-lg font-bold tracking-tight">
+      <app-logo sizeClass="size-9" />
+      A Pachas
+    </a>
+
+    <ul class="flex flex-wrap items-center gap-1 text-sm font-medium">
+      <li>
+        <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">Inicio</a>
+      </li>
+      @if (auth.isLoggedIn()) {
+        <li><a routerLink="/groups" routerLinkActive="nav-active" class="nav-link">Mis grupos</a></li>
+        <li><a routerLink="/invitations" routerLinkActive="nav-active" class="nav-link">Invitaciones</a></li>
+        <li>
+          <button type="button" (click)="logout()" class="nav-link cursor-pointer">Cerrar sesión</button>
+        </li>
+      } @else {
+        <li><a routerLink="/login" routerLinkActive="nav-active" class="nav-link">Login</a></li>
+        <li><a routerLink="/register" routerLinkActive="nav-active" class="nav-link">Register</a></li>
+      }
+    </ul>
+  </nav>
+</header>

@@ -1,3 +1,153 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+/* ---------------------------------------------------------------------
+   Tokens de diseño: Tailwind genera las clases a partir de ellos
+   (bg-night, text-frost, border-light-blue, font-display...).
+   --------------------------------------------------------------------- */
+@theme {
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* Colores globales de la app (los del logotipo) */
+  --color-light-blue: #19b0d4;
+  --color-dark-blue: #1e293b;
+  --color-orange: #f5684a;
+
+  /* Colores de apoyo, todos en la gama de azules */
+  --color-night: #0a1220;        /* fondo de la app */
+  --color-deep-blue: #1d4ed8;    /* segundo resplandor del fondo */
+  --color-frost: #e6f1f8;        /* texto principal */
+  --color-muted: #93a7bd;        /* texto secundario */
+  --color-orange-light: #f7866d; /* hover de los botones naranjas */
+
+  /* Colores con significado, claros para leerse sobre fondo oscuro */
+  --color-owed: #34d399;         /* saldo positivo: le deben */
+  --color-owes: #f87171;         /* saldo negativo y errores */
+
+  /* Sombra de las cajas flotantes, con un brillo azul */
+  --shadow-float: 0 24px 60px -20px rgb(25 176 212 / 0.35), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-glow-orange: 0 10px 30px -8px rgb(245 104 74 / 0.6);
+
+  --animate-float: float 7s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-14px);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------
+   CSS propio: fondo, cajas flotantes, formularios y botones
+   --------------------------------------------------------------------- */
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  /* Fondo: azul noche con dos resplandores azules */
+  body {
+    @apply min-h-dvh font-sans text-frost antialiased;
+    background:
+      radial-gradient(55rem 40rem at 5% -10%, rgb(25 176 212 / 0.22), transparent 60%),
+      radial-gradient(50rem 40rem at 105% 35%, rgb(29 78 216 / 0.2), transparent 60%),
+      var(--color-night);
+    background-attachment: fixed;
+  }
+
+  /* Rejilla muy suave por encima del fondo, que se desvanece hacia abajo */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgb(25 176 212 / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(25 176 212 / 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, black, transparent 75%);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-light-blue);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* Caja flotante: cristal azulado con borde luminoso y sombra con brillo */
+  .panel {
+    @apply rounded-3xl border border-light-blue/20 bg-dark-blue/55 shadow-float backdrop-blur-xl;
+  }
+
+  /* Título con degradado de blanco a azul claro */
+  .text-gradient {
+    @apply bg-linear-to-r from-frost to-light-blue bg-clip-text text-transparent;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold text-frost;
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-sm text-muted;
+  }
+
+  .field-input {
+    @apply w-full rounded-xl border border-light-blue/20 bg-night/70 px-3.5 py-2.5 text-base text-frost;
+    @apply transition-shadow focus:border-light-blue focus:shadow-[0_0_0_4px_rgb(25_176_212/0.18)] focus:outline-none;
+  }
+
+  /* El autocompletado del navegador pinta el campo de blanco: se mantiene el fondo oscuro */
+  .field-input:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-frost);
+    box-shadow: 0 0 0 1000px var(--color-night) inset;
+  }
+
+  /* Angular añade ng-invalid y ng-touched a los campos del formulario */
+  .field-input.ng-invalid.ng-touched {
+    @apply border-owes/70;
+  }
+
+  .field-error {
+    @apply mt-1.5 text-sm text-owes;
+  }
+
+  .alert-error {
+    @apply rounded-xl border border-owes/30 bg-owes/10 px-4 py-3 text-sm text-owes;
+  }
+
+  .alert-success {
+    @apply rounded-xl border border-owed/30 bg-owed/10 px-4 py-3 text-sm text-owed;
+  }
+
+  .link {
+    @apply font-semibold text-light-blue underline decoration-light-blue/40 decoration-2 underline-offset-4 hover:decoration-light-blue;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold transition;
+    @apply disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* Texto azul oscuro sobre naranja: el blanco no llega al contraste mínimo */
+  .btn-primary {
+    @apply bg-orange text-dark-blue shadow-glow-orange hover:bg-orange-light;
+  }
+
+  .btn-secondary {
+    @apply border border-light-blue/50 text-light-blue hover:bg-light-blue/10;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

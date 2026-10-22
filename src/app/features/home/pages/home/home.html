@@ -1,0 +1,43 @@
+<section class="grid items-center gap-12 md:grid-cols-[1fr_auto]">
+  <div class="max-w-xl">
+    <h1 class="text-gradient font-display text-5xl leading-[1.05] font-extrabold tracking-tight sm:text-6xl">
+      @if (auth.currentUser(); as user) {
+        ¡Bienvenido/a, {{ user.name }}!
+      } @else {
+        ¡Bienvenido/a!
+      }
+    </h1>
+    <p class="mt-5 text-lg leading-relaxed text-muted">
+      Apunta los gastos que compartes con tus amigos, en un viaje o en un piso compartido,
+      y A Pachas calcula cuánto debe cada uno.
+    </p>
+
+    <div class="mt-8 flex flex-wrap gap-3">
+      @if (auth.isLoggedIn()) {
+        <a routerLink="/groups" class="btn btn-primary">Ver mis grupos</a>
+      } @else {
+        <a routerLink="/register" class="btn btn-primary">Crear una cuenta</a>
+        <a routerLink="/login" class="btn btn-secondary">Iniciar sesión</a>
+      }
+    </div>
+  </div>
+
+  <!-- El logotipo flota sobre un halo azul -->
+  <div class="relative hidden md:block" aria-hidden="true">
+    <div class="absolute -inset-10 rounded-full bg-light-blue/30 blur-3xl"></div>
+    <app-logo sizeClass="relative block size-60 animate-float drop-shadow-[0_30px_40px_rgb(0_0_0/0.45)]" />
+  </div>
+</section>
+
+<!-- Cómo funciona, en tres pasos -->
+<section class="mt-16 grid gap-5 sm:grid-cols-3">
+  @for (step of steps; track step.title; let i = $index) {
+    <article class="panel p-6">
+      <span class="flex size-9 items-center justify-center rounded-xl bg-light-blue/15 font-display font-bold text-light-blue">
+        {{ i + 1 }}
+      </span>
+      <h2 class="mt-4 font-display text-lg font-semibold">{{ step.title }}</h2>
+      <p class="mt-2 text-sm leading-relaxed text-muted">{{ step.text }}</p>
+    </article>
+  }
+</section>
