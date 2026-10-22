@@ -17,7 +17,7 @@ El proyecto se basa en el enunciado **"Compartir gastos"**.
 |---|---|
 | Base y autenticación: navbar, footer, inicio, registro, login, guards e interceptor | ✅ Completado |
 | Grupos: "Mis grupos" con filtro activos/cerrados, creación y detalle con saldos, presupuesto y miembros | ✅ Completado |
-| Invitaciones | ⏳ Pendiente |
+| Invitaciones: aceptarlas o rechazarlas, e invitar y anular desde el detalle del grupo | ✅ Completado |
 | Gastos: listado y creación | ⏳ Pendiente |
 | Editar y borrar gastos, liquidaciones, cierre y reapertura, salir y expulsar | ⏳ Después de la entrega |
 | Despliegue | ⏳ Pendiente |
@@ -135,8 +135,8 @@ La app muestra siempre un navbar, el contenido y un footer. El navbar enlaza a I
 | `/register` | Pública (sin sesión) | Registro: nombre, apellidos, nickname, email, contraseña y repetir contraseña. Después redirige a `/login?registered=1`. |
 | `/groups` | Privada | "Mis grupos", con filtro de activos (por defecto) y cerrados (`/groups?status=closed`). |
 | `/groups/new` | Privada | Creación de un grupo: título, descripción, presupuesto (opcional) y moneda. Después redirige al detalle. |
-| `/groups/:id` | Privada (miembros) | Detalle del grupo: saldos, presupuesto y miembros. Un grupo ajeno o inexistente muestra "Grupo no encontrado". |
-| `/invitations` | Privada | Invitaciones pendientes, para aceptarlas o rechazarlas. |
+| `/groups/:id` | Privada (miembros) | Detalle del grupo: saldos, presupuesto, miembros e invitaciones pendientes. El creador invita por email o nickname y anula invitaciones. Un grupo ajeno o inexistente muestra "Grupo no encontrado". |
+| `/invitations` | Privada | Invitaciones pendientes, para aceptarlas (con un enlace al grupo) o rechazarlas. |
 
 ## Autenticación
 
@@ -173,13 +173,13 @@ frontend-proyecto-final/
         └── features/          # una carpeta por funcionalidad
             ├── home/
             ├── users/
-            └── groups/        # cada una con pages/ y services/
+            └── groups/        # users/ y groups/ con pages/ y services/; home/ solo con pages/
 ```
 
 ## Diseño
 
 - Estética oscura y futurista: fondo azul noche con resplandores azules y una rejilla suave, contenido en paneles de cristal (`.panel`, con `backdrop-blur`) y títulos con degradado (`.text-gradient`).
-- Colores principales, definidos en `styles.css`: `light-blue` #19b0d4, `dark-blue` #1e293b y `orange` #f5684a, con colores de apoyo (`night`, `deep-blue`, `frost`, `muted`) y de significado (`owed` verde para lo que te deben y `owes` rojo para lo que debes).
+- Colores principales, definidos en `styles.css`: `light-blue` #19b0d4, `dark-blue` #1e293b y `orange` #f5684a, con colores de apoyo (`night`, `deep-blue`, `frost`, `muted`, `orange-light`) y de significado (`owed` verde para lo que te deben y `owes` rojo para lo que debes).
 - Los botones naranjas llevan el texto en `dark-blue`, porque el blanco no cumple el contraste mínimo.
 - Tipografías: Sora (títulos) y Public Sans (texto).
 - Logotipo: una moneda en degradado azul cortada por una línea naranja.

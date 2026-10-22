@@ -1,15 +1,19 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 
 import { Balance, GroupDetail } from '../../../../core/interfaces/group.interface';
+import { GroupInvitation } from '../../../../core/interfaces/invitation.interface';
 import { getErrorMessage } from '../../../../core/utils/api-error';
+import { notBlank } from '../../../../core/utils/validators';
 import { AuthService } from '../../../users/services/auth.service';
 import { GroupsService } from '../../services/groups.service';
+import { InvitationsService } from '../../services/invitations.service';
 
 // Saldo preparado para mostrarlo: la cantidad sin signo y si le deben, debe o está al día
 interface BalanceView extends Balance {
@@ -20,12 +24,14 @@ interface BalanceView extends Balance {
 // Se llama GroupDetailPage para no confundirse con la interfaz GroupDetail
 @Component({
   selector: 'app-group-detail',
-  imports: [RouterLink, CurrencyPipe, DatePipe],
+  imports: [RouterLink, ReactiveFormsModule, CurrencyPipe, DatePipe],
   templateUrl: './group-detail.html',
   styleUrl: './group-detail.css',
 })
 export class GroupDetailPage {
   private readonly groupsService = inject(GroupsService);
+  private readonly invitationsService = inject(InvitationsService);
+  private readonly fb = inject(NonNullableFormBuilder);
   private readonly title = inject(Title);
   protected readonly auth = inject(AuthService);
 
@@ -41,6 +47,27 @@ export class GroupDetailPage {
   protected readonly isCreator = computed(
     () => this.group()?.creator.id === this.auth.currentUser()?.id,
   );
+
+  // ---- Invitaciones pendientes del grupo ----
+  protected readonly invitations = signal<GroupInvitation[]>([]);
+
+  // Solo el creador gestiona las invitaciones, y solo con el grupo activo.
+  // La API lo comprueba igualmente: aquí solo se ocultan los controles.
+  protected readonly canManage = computed(
+    () => this.isCreator() && this.group()?.status === 'active',
+  );
+
+  // Mismo campo que el login: email o nickname
+  protected readonly inviteForm = this.fb.group({
+    login: ['', [notBlank, Validators.maxLength(255)]],
+  });
+  protected readonly inviting = signal(false);
+  protected readonly inviteMessage = signal<string | null>(null);
+  protected readonly inviteError = signal<string | null>(null);
+
+  // Invitación que está pidiendo confirmación para anularla, y la que se está anulando
+  protected readonly confirmingCancelId = signal<number | null>(null);
+  protected readonly cancellingId = signal<number | null>(null);
 
   // Los importes llegan como texto; se convierten a número solo para mostrarlos
   protected readonly budget = computed(() => {
@@ -72,6 +99,7 @@ export class GroupDetailPage {
           forkJoin({
             group: this.groupsService.getGroup(id),
             balances: this.groupsService.getBalances(id),
+            invitations: this.invitationsService.getGroupInvitations(id),
           }).pipe(
             map((data) => ({ data, error: null as unknown })),
             catchError((error) => of({ data: null, error: error as unknown })),
@@ -84,6 +112,7 @@ export class GroupDetailPage {
         if (data) {
           this.group.set(data.group);
           this.balances.set(data.balances.map(toBalanceView));
+          this.invitations.set(data.invitations);
           this.title.setTitle(`${data.group.title} | A Pachas`);
           return;
         }
@@ -96,6 +125,73 @@ export class GroupDetailPage {
           this.errorMessage.set(getErrorMessage(error));
         }
       });
+  }
+
+  invite(): void {
+    if (this.inviteForm.invalid) {
+      this.inviteForm.markAllAsTouched();
+      return;
+    }
+    this.inviting.set(true);
+    this.inviteMessage.set(null);
+    this.inviteError.set(null);
+
+    this.invitationsService.invite(this.id(), { login: this.inviteForm.getRawValue().login.trim() }).subscribe({
+      next: (invitation) => {
+        this.inviting.set(false);
+        this.inviteMessage.set(
+          `Invitación enviada a ${invitation.user.name} ${invitation.user.lastname}.`,
+        );
+        this.inviteForm.reset();
+        this.reloadInvitations();
+      },
+      // 404 "Usuario no encontrado", 409 si ya es miembro o ya está invitado...
+      error: (error) => {
+        this.inviting.set(false);
+        this.inviteError.set(getErrorMessage(error));
+      },
+    });
+  }
+
+  // El primer clic pide confirmación; el segundo anula la invitación
+  cancelInvitation(invitation: GroupInvitation): void {
+    const userId = invitation.user.id;
+    if (this.confirmingCancelId() !== userId) {
+      this.confirmingCancelId.set(userId);
+      return;
+    }
+    this.cancellingId.set(userId);
+    this.inviteMessage.set(null);
+    this.inviteError.set(null);
+
+    this.invitationsService.cancel(this.id(), userId).subscribe({
+      next: () => {
+        this.cancellingId.set(null);
+        this.confirmingCancelId.set(null);
+        this.inviteMessage.set(
+          `Invitación a ${invitation.user.name} ${invitation.user.lastname} anulada.`,
+        );
+        this.reloadInvitations();
+      },
+      error: (error) => {
+        this.cancellingId.set(null);
+        this.confirmingCancelId.set(null);
+        this.inviteError.set(getErrorMessage(error));
+        this.reloadInvitations();
+      },
+    });
+  }
+
+  keepInvitation(): void {
+    this.confirmingCancelId.set(null);
+  }
+
+  // Tras un cambio solo se vuelve a pedir lo que ha cambiado: las invitaciones
+  private reloadInvitations(): void {
+    this.invitationsService.getGroupInvitations(this.id()).subscribe({
+      next: (invitations) => this.invitations.set(invitations),
+      error: (error) => this.inviteError.set(getErrorMessage(error)),
+    });
   }
 
   protected isMe(userId: number): boolean {

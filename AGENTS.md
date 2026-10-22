@@ -115,7 +115,7 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 | `/register`    | Pública            | Formulario de registro: nombre, apellidos, nickname, email, contraseña y repetir contraseña. Tras registrarse se redirige a `/login`.                                                                                                        |
 | `/groups`      | Privada            | Listado "Mis grupos": grupos en los que el usuario es miembro `accepted`. Tiene un filtro que por defecto muestra los grupos activos; los cerrados se consultan cambiando el filtro y se abren en modo solo lectura. Botón para crear grupo. |
 | `/groups/new`  | Privada            | Formulario de creación de grupo: título, descripción, presupuesto (opcional) y moneda.                                                                                                                                                       |
-| `/groups/:id`  | Privada (miembros) | Detalle del grupo: gastos, liquidaciones, saldos y, si existe, progreso del gasto frente al presupuesto. El creador ve además los controles de gestión.                                                                                      |
+| `/groups/:id`  | Privada (miembros) | Detalle del grupo: gastos, liquidaciones, saldos, miembros, invitaciones pendientes y, si existe, progreso del gasto frente al presupuesto. El creador ve además los controles de gestión.                                                   |
 | `/invitations` | Privada            | Invitaciones pendientes del usuario, con opción de aceptar o rechazar.                                                                                                                                                                       |
 
 ### Tecnología y configuración
@@ -133,7 +133,7 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 - `public/logo.svg`: logotipo y favicon.
 - `src/environments/environment.ts`: URL de la API.
 - `src/styles.css`: tokens de Tailwind y clases reutilizables de CSS propio (`field-input`, `btn`, `alert-error`, `.panel`, `.text-gradient`...).
-- Estructura de `src/app/`: `core/` (`components/`, `guards/`, `interceptors/`, `interfaces/` y `utils/`) y `features/` con una carpeta por funcionalidad (`home/`, `users/` y `groups/`), cada una con `pages/` y `services/`.
+- Estructura de `src/app/`: `core/` (`components/`, `guards/`, `interceptors/`, `interfaces/` y `utils/`) y `features/` con una carpeta por funcionalidad (`home/`, `users/` y `groups/`), cada una con `pages/` y, si los necesita, `services/` (`home/` no tiene). Los validadores de formulario compartidos (`notBlank`) están en `core/utils/validators.ts`.
 
 ### Autenticación en el cliente
 
@@ -146,7 +146,7 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 ### Diseño
 
 - Diseño oscuro y futurista: fondo azul noche (`night`) con resplandores azules y una rejilla suave; contenido en cajas flotantes (`.panel`: cristal azulado con `backdrop-blur`, borde azul claro y sombra con brillo azul); títulos con degradado (`.text-gradient`); tipografías Sora (títulos) y Public Sans (texto).
-- Colores globales (`styles.css`): `light-blue` #19b0d4, `dark-blue` #1e293b y `orange` #f5684a, más colores de apoyo en la gama de azules (`night`, `deep-blue`, `frost`, `muted`) y de significado (`owed` verde y `owes` rojo, claros para leerse sobre fondo oscuro). Los botones naranjas llevan el texto en `dark-blue`, porque el blanco no cumple el contraste mínimo.
+- Colores globales (`styles.css`): `light-blue` #19b0d4, `dark-blue` #1e293b y `orange` #f5684a, más colores de apoyo (`night`, `deep-blue`, `frost` y `muted`, en la gama de azules, y `orange-light` para el hover de los botones naranjas) y de significado (`owed` verde y `owes` rojo, claros para leerse sobre fondo oscuro). Los botones naranjas llevan el texto en `dark-blue`, porque el blanco no cumple el contraste mínimo.
 - Logotipo: moneda en degradado azul (`light-blue` a `deep-blue`) cortada en diagonal por una línea `orange`, sobre un cuadrado redondeado de cristal azul oscuro con borde luminoso. Está en `public/logo.svg` (también es el favicon) y en el componente `core/components/logo`, que genera ids únicos para sus degradados.
 
 ### Páginas de grupos
@@ -155,7 +155,17 @@ Los permisos se comprueban siempre en la API, no solo en el front-end, centraliz
 - El presupuesto admite coma o punto en el formulario y se envía a la API como texto con punto ("150.50").
 - Al crear un grupo, se redirige a su detalle.
 - `/groups/abc` (422) y un grupo ajeno o inexistente (404) muestran el mismo mensaje: "Grupo no encontrado".
-- Al abrir la página del grupo, las peticiones de cada parte (detalle, saldos...) se lanzan a la vez con `forkJoin`.
+- Al abrir la página del grupo, las peticiones de cada parte (detalle, saldos, invitaciones...) se lanzan a la vez con `forkJoin`.
+
+### Páginas de invitaciones
+
+- Las peticiones de invitaciones están en `InvitationsService` (`features/groups/services/`), tanto las del invitado (`/api/invitations`) como las del grupo (`/api/groups/{group_id}/invitations`).
+- `/invitations` muestra cada invitación con el título, la descripción, el creador y la fecha. Al aceptar, aparece "Ya eres miembro de «título»" con un enlace "Ir al grupo"; la app no redirige sola.
+- Rechazar una invitación y anularla piden confirmación en la propia tarjeta (un segundo botón "Sí, rechazar" o "Sí, anular"), no con el `confirm()` del navegador.
+- Si aceptar o rechazar falla (por ejemplo, porque el creador anuló la invitación entretanto), se muestra el error de la API y se vuelve a pedir la lista.
+- El detalle del grupo tiene una sección "Invitaciones pendientes" que ven todos los miembros. El formulario de invitar (email o nickname en un solo campo, como en el login) y el botón "Anular" solo se muestran al creador y con el grupo activo.
+- Los errores al invitar (404 "Usuario no encontrado", 409 si ya es miembro o ya tiene una invitación pendiente) muestran el mensaje de la API.
+- Tras invitar o anular, solo se vuelve a pedir `GET /api/groups/{group_id}/invitations`, no el resto del grupo.
 
 ### Contrato con la API
 
@@ -326,5 +336,5 @@ Cambio de planificación por la fecha de entrega (23/10/2026, antes de las 00:00
 
 - Bloque 1 (base y autenticación: navbar, footer, inicio, registro, login, guards e interceptor) ✅ completado.
 - Bloque 2 (grupos: listado "Mis grupos" con filtro activos/cerrados, creación de grupo y detalle con saldos, presupuesto y miembros) ✅ completado.
-- Invitaciones (`/invitations` e invitar desde el detalle del grupo) ⏳ pendiente.
+- Bloque 3 (invitaciones: `/invitations` para aceptar o rechazar, e invitar y anular desde el detalle del grupo) ✅ completado.
 - Gastos (listado y creación) ⏳ pendiente; depende de la fase 4 de la API.

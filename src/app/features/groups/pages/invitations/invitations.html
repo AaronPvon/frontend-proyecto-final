@@ -1,0 +1,69 @@
+<header>
+  <h1 class="text-gradient font-display text-4xl font-extrabold tracking-tight">Invitaciones</h1>
+  <p class="mt-2 text-muted">Grupos a los que te han invitado. Al aceptar, podrás ver sus gastos y saldos.</p>
+</header>
+
+<div class="mt-6 space-y-3" aria-live="polite">
+  @if (accepted(); as accepted) {
+    <p class="alert-success">
+      Ya eres miembro de «{{ accepted.title }}».
+      <a [routerLink]="['/groups', accepted.groupId]" class="ml-1 font-semibold underline underline-offset-4">Ir al grupo</a>
+    </p>
+  }
+  @if (rejectedTitle()) {
+    <p class="rounded-xl border border-light-blue/25 bg-light-blue/10 px-4 py-3 text-sm text-frost">
+      Has rechazado la invitación a «{{ rejectedTitle() }}».
+    </p>
+  }
+  @if (actionError()) {
+    <p class="alert-error" role="alert">{{ actionError() }}</p>
+  }
+</div>
+
+<section class="mt-6">
+  @if (loading()) {
+    <p class="text-muted">Cargando invitaciones…</p>
+  } @else if (errorMessage()) {
+    <p class="alert-error" role="alert">{{ errorMessage() }}</p>
+  } @else if (invitations().length === 0) {
+    <div class="panel p-8 text-center sm:p-12">
+      <h2 class="font-display text-xl font-semibold">No tienes invitaciones pendientes</h2>
+      <p class="mx-auto mt-2 max-w-md text-muted">
+        Cuando alguien te invite a un grupo, aparecerá aquí para que lo aceptes o lo rechaces.
+      </p>
+      <a routerLink="/groups" class="btn btn-secondary mt-6">Ir a mis grupos</a>
+    </div>
+  } @else {
+    <ul class="grid gap-5 md:grid-cols-2">
+      @for (invitation of invitations(); track invitation.group_id) {
+        <li class="panel flex flex-col p-6">
+          <h2 class="font-display text-xl font-semibold">{{ invitation.title }}</h2>
+          @if (invitation.description) {
+            <p class="mt-2 text-sm leading-relaxed text-muted">{{ invitation.description }}</p>
+          }
+          <p class="mt-4 text-sm text-muted">
+            Te invitó <span class="font-semibold text-frost">{{ invitation.creator.name }} {{ invitation.creator.lastname }}</span>
+            (&#64;{{ invitation.creator.nickname }}) el {{ invitation.invited_at | date: 'longDate' }}.
+          </p>
+
+          <div class="mt-auto flex flex-wrap items-center gap-3 pt-6">
+            @if (confirmingRejectId() === invitation.group_id) {
+              <span class="text-sm text-frost">¿Rechazar la invitación?</span>
+              <button type="button" class="btn btn-secondary" (click)="reject(invitation)"
+                [disabled]="busyId() === invitation.group_id">Sí, rechazar</button>
+              <button type="button" class="btn text-muted hover:text-frost" (click)="cancelReject()"
+                [disabled]="busyId() === invitation.group_id">Cancelar</button>
+            } @else {
+              <button type="button" class="btn btn-primary" (click)="accept(invitation)"
+                [disabled]="busyId() === invitation.group_id">
+                {{ busyId() === invitation.group_id ? 'Aceptando…' : 'Aceptar' }}
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="reject(invitation)"
+                [disabled]="busyId() === invitation.group_id">Rechazar</button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>
